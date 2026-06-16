@@ -11,6 +11,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     WebAppInfo,
     MenuButtonWebApp,
+    FSInputFile,
 )
 from dotenv import load_dotenv
 
@@ -30,6 +31,19 @@ bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
 
+BANNER_FILE = Path(__file__).parent / "banner.png"
+
+WELCOME_TEXT = (
+    "🎯 <b>Демо-накрутка до 10 000 лайков/просмотров — за 1 ₽</b>\n\n"
+    "Наш сервис только запустился, и чтобы завоевать доверие — "
+    "мы дарим каждому новому пользователю пробную накрутку "
+    "<b>до 10 000 единиц всего за 1 рубль.</b>\n\n"
+    "💡 Хочешь больше? Продвижение в ленту, охваты, подписчики — "
+    "всё это доступно в <b>PRO-режиме</b> внутри приложения.\n\n"
+    "👇 <b>Нажми кнопку, пройди за 30 секунд и получай ХАЛЯВУ прямо сейчас!</b>"
+)
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message) -> None:
     kb = InlineKeyboardMarkup(
@@ -42,10 +56,20 @@ async def cmd_start(message: types.Message) -> None:
             ]
         ]
     )
-    await message.answer(
-        "🎯 Получи до 10 000 лайков/просмотров за 1 рубль!\n\nНажми кнопку ниже 👇",
-        reply_markup=kb,
-    )
+    # Отправляем баннер + текст вместе
+    if BANNER_FILE.exists():
+        await message.answer_photo(
+            photo=FSInputFile(BANNER_FILE),
+            caption=WELCOME_TEXT,
+            parse_mode="HTML",
+            reply_markup=kb,
+        )
+    else:
+        await message.answer(
+            WELCOME_TEXT,
+            parse_mode="HTML",
+            reply_markup=kb,
+        )
     # Кнопка «НАКРУТИТЬ» слева от поля ввода
     try:
         await bot.set_chat_menu_button(
