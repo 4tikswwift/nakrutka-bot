@@ -1,6 +1,8 @@
 import asyncio
+import json
 import os
 import logging
+import urllib.parse
 from pathlib import Path
 
 from aiohttp import web
@@ -20,16 +22,16 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://your-app.up.railway.app")
-PORT = int(os.getenv("PORT", 8080))
+BOT_TOKEN   = os.getenv("BOT_TOKEN")
+WEBAPP_URL  = os.getenv("WEBAPP_URL", "https://your-app.up.railway.app")
+PORT        = int(os.getenv("PORT", 8080))
+PAYMENT_URL = os.getenv("PAYMENT_URL", "https://onelinkgo.ru/stream/nakrutka")
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set in environment")
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-
+dp  = Dispatcher()
 
 BANNER_FILE = Path(__file__).parent / "banner.png"
 
@@ -44,20 +46,24 @@ WELCOME_TEXT = (
     "⚠️ Если накрутка не началась в течение 24 часов после оплаты — пишите в поддержку @nagievChina"
 )
 
+PAYMENT_TEXT = (
+    "🎁 <b>Получай подарок и доступ к аналитике за 1 рубль!</b>\n\n"
+    "Твоя заявка на накрутку готова — осталось оплатить всего <b>1 ₽</b>\n\n"
+    "После оплаты:\n"
+    "✅ Накрутка запустится автоматически\n"
+    "✅ Доступ к аналитике на 5 дней\n"
+    "✅ Шанс выиграть подарок от партнёра\n\n"
+    "👇 Нажми кнопку и оплати 1 ₽"
+)
+
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message) -> None:
     kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="🚀 Открыть сервис",
-                    web_app=WebAppInfo(url=WEBAPP_URL),
-                )
-            ]
-        ]
+        inline_keyboard=[[
+            InlineKeyboardButton(text="🚀 Открыть сервис", web_app=WebAppInfo(url=WEBAPP_URL))
+        ]]
     )
-    # Отправляем баннер + текст вместе
     if BANNER_FILE.exists():
         await message.answer_photo(
             photo=FSInputFile(BANNER_FILE),
@@ -66,25 +72,48 @@ async def cmd_start(message: types.Message) -> None:
             reply_markup=kb,
         )
     else:
-        await message.answer(
-            WELCOME_TEXT,
-            parse_mode="HTML",
-            reply_markup=kb,
-        )
-    # Кнопка «НАКРУТИТЬ» слева от поля ввода
+        await message.answer(WELCOME_TEXT, parse_mode="HTML", reply_markup=kb)
+
     try:
         await bot.set_chat_menu_button(
             chat_id=message.chat.id,
-            menu_button=MenuButtonWebApp(
-                text="НАКРУТИТЬ",
-                web_app=WebAppInfo(url=WEBAPP_URL),
-            ),
+            menu_button=MenuButtonWebApp(text="НАКРУТИТЬ", web_app=WebAppInfo(url=WEBAPP_URL)),
         )
     except Exception as e:
         log.warning("Could not set menu button: %s", e)
 
 
-# ── Web server (раздаём index.html) ──────────────────────────────────────────
+# ── Delayed payment message ───────────────────────────────────────────────────
+
+async def send_delayed_payment(chat_id: int) -> None:
+    await asyncio.sleep(120)  # 2 minutes
+    try:
+        kb = InlineKeyboardMarkup(
+            inline_keyboard=[[
+                InlineKeyboardButton(text="💳 Оплатить 1 ₽", url=PAYMENT_URL)
+            ]]
+        )
+        if BANNER_FILE.exists():
+            await bot.send_photo(
+                chat_id=chat_id,
+                photo=FSInputFile(BANNER_FILE),
+                caption=PAYMENT_TEXT,
+                parse_mode="HTML",
+                reply_markup=kb,
+            )
+        else:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=PAYMENT_TEXT,
+                parse_mode="HTML",
+                reply_markup=kb,
+            )
+        log.info("Payment message sent to %d", chat_id)
+    except Exception as e:
+        log.error("Failed to send payment message to %d: %s", chat_id, e)
+
+
+# ── Web server ────────────────────────────────────────────────────────────────
 
 HTML_FILE = Path(__file__).parent / "index.html"
 
@@ -97,10 +126,31 @@ async def handle_health(request: web.Request) -> web.Response:
     return web.Response(text="ok")
 
 
+async def handle_order(request: web.Request) -> web.Response:
+    try:
+        data = await request.json()
+        init_data = data.get("initData", "")
+        parsed    = urllib.parse.parse_qs(init_data)
+        user_str  = parsed.get("user", ["{}"])[0]
+        user      = json.loads(user_str)
+        chat_id   = user.get("id")
+
+        if chat_id:
+            log.info("Order received from %d — scheduling payment in 2 min", chat_id)
+            asyncio.create_task(send_delayed_payment(int(chat_id)))
+        else:
+            log.warning("Order received but could not parse chat_id from initData")
+    except Exception as e:
+        log.error("handle_order error: %s", e)
+
+    return web.Response(text="ok")
+
+
 async def build_app() -> web.Application:
     app = web.Application()
-    app.router.add_get("/", handle_index)
-    app.router.add_get("/health", handle_health)
+    app.router.add_get("/",        handle_index)
+    app.router.add_get("/health",  handle_health)
+    app.router.add_post("/order",  handle_order)
     return app
 
 
