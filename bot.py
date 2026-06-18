@@ -53,7 +53,14 @@ PAYMENT_TEXT = (
     "✅ Накрутка запустится автоматически\n"
     "✅ Доступ к аналитике на 5 дней\n"
     "✅ Шанс выиграть подарок от партнёра\n\n"
+    "🔥 Только что оплатили: @shpeeeeh, @nagievChina\n\n"
     "👇 Нажми кнопку и оплати 1 ₽"
+)
+
+FOLLOWUP_TEXT = (
+    "👋 Эй! Твоя заявка на накрутку всё ещё ждёт оплаты.\n\n"
+    "Не потеряй своё место — заявки хранятся 24 часа, потом сгорают 🔥\n\n"
+    "Напомнить когда будешь готов оплатить?"
 )
 
 
@@ -83,7 +90,7 @@ async def cmd_start(message: types.Message) -> None:
         log.warning("Could not set menu button: %s", e)
 
 
-# ── Delayed payment message ───────────────────────────────────────────────────
+# ── Delayed messages ─────────────────────────────────────────────────────────
 
 async def send_delayed_payment(chat_id: int) -> None:
     await asyncio.sleep(120)  # 2 minutes
@@ -113,6 +120,43 @@ async def send_delayed_payment(chat_id: int) -> None:
         log.error("Failed to send payment message to %d: %s", chat_id, e)
 
 
+async def send_followup(chat_id: int) -> None:
+    await asyncio.sleep(6 * 3600)  # 6 hours
+    try:
+        kb = InlineKeyboardMarkup(inline_keyboard=[[
+            InlineKeyboardButton(text="✅ Да, напомни!", callback_data="remind"),
+            InlineKeyboardButton(text="❌ Не надо",     callback_data="cancel"),
+        ]])
+        await bot.send_message(chat_id=chat_id, text=FOLLOWUP_TEXT, reply_markup=kb)
+        log.info("Follow-up sent to %d", chat_id)
+    except Exception as e:
+        log.error("Failed to send followup to %d: %s", chat_id, e)
+
+
+@dp.callback_query(lambda c: c.data == "remind")
+async def cb_remind(callback: types.CallbackQuery) -> None:
+    await callback.answer()
+    await callback.message.delete()
+    kb = InlineKeyboardMarkup(inline_keyboard=[[
+        InlineKeyboardButton(text="💳 Оплатить 1 ₽", url=PAYMENT_URL)
+    ]])
+    if BANNER_FILE.exists():
+        await callback.message.answer_photo(
+            photo=FSInputFile(BANNER_FILE),
+            caption=PAYMENT_TEXT,
+            parse_mode="HTML",
+            reply_markup=kb,
+        )
+    else:
+        await callback.message.answer(PAYMENT_TEXT, parse_mode="HTML", reply_markup=kb)
+
+
+@dp.callback_query(lambda c: c.data == "cancel")
+async def cb_cancel(callback: types.CallbackQuery) -> None:
+    await callback.answer("Понял! Если передумаешь — мы тут 😊")
+    await callback.message.delete()
+
+
 # ── Web server ────────────────────────────────────────────────────────────────
 
 HTML_FILE = Path(__file__).parent / "index.html"
@@ -136,8 +180,9 @@ async def handle_order(request: web.Request) -> web.Response:
         chat_id   = user.get("id")
 
         if chat_id:
-            log.info("Order received from %d — scheduling payment in 2 min", chat_id)
+            log.info("Order received from %d — scheduling payment + followup", chat_id)
             asyncio.create_task(send_delayed_payment(int(chat_id)))
+            asyncio.create_task(send_followup(int(chat_id)))
         else:
             log.warning("Order received but could not parse chat_id from initData")
     except Exception as e:
