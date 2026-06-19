@@ -22,10 +22,11 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger(__name__)
 
-BOT_TOKEN   = os.getenv("BOT_TOKEN")
-WEBAPP_URL  = os.getenv("WEBAPP_URL", "https://your-app.up.railway.app")
-PORT        = int(os.getenv("PORT", 8080))
-PAYMENT_URL = os.getenv("PAYMENT_URL", "https://onelinkgo.ru/stream/nakrutka")
+BOT_TOKEN      = os.getenv("BOT_TOKEN")
+WEBAPP_URL     = os.getenv("WEBAPP_URL", "https://your-app.up.railway.app")
+PORT           = int(os.getenv("PORT", 8080))
+PAYMENT_URL    = os.getenv("PAYMENT_URL", "https://onelinkgo.ru/stream/nakrutka")
+ADMIN_CHAT_ID  = int(os.getenv("ADMIN_CHAT_ID", 0))
 
 if not BOT_TOKEN:
     raise RuntimeError("BOT_TOKEN is not set in environment")
@@ -65,8 +66,33 @@ FOLLOWUP_TEXT = (
 )
 
 
+@dp.message(Command("myid"))
+async def cmd_myid(message: types.Message) -> None:
+    await message.answer(f"Твой chat_id: <code>{message.chat.id}</code>", parse_mode="HTML")
+
+
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message) -> None:
+    if ADMIN_CHAT_ID:
+        u = message.from_user
+        name = f"{u.first_name or ''} {u.last_name or ''}".strip()
+        username = f"@{u.username}" if u.username else "—"
+        from datetime import datetime, timezone, timedelta
+        msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y в %H:%M")
+        try:
+            await bot.send_message(
+                chat_id=ADMIN_CHAT_ID,
+                text=(
+                    f"👤 <b>Новый пользователь!</b>\n"
+                    f"Имя: {name}\n"
+                    f"Ник: {username}\n"
+                    f"ID: <code>{u.id}</code>\n"
+                    f"🕐 {msk}"
+                ),
+                parse_mode="HTML",
+            )
+        except Exception as e:
+            log.warning("Admin notify failed: %s", e)
     kb = InlineKeyboardMarkup(
         inline_keyboard=[[
             InlineKeyboardButton(text="🚀 Открыть сервис", web_app=WebAppInfo(url=WEBAPP_URL))
