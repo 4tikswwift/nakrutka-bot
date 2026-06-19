@@ -17,6 +17,8 @@ from aiogram.types import (
 )
 from dotenv import load_dotenv
 
+from datetime import datetime, timezone, timedelta
+
 load_dotenv()
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -35,6 +37,39 @@ bot = Bot(token=BOT_TOKEN)
 dp  = Dispatcher()
 
 BANNER_FILE = Path(__file__).parent / "banner.png"
+STATS_FILE  = Path(__file__).parent / "stats.json"
+
+
+def _today_msk() -> str:
+    return datetime.now(timezone(timedelta(hours=3))).strftime("%Y-%m-%d")
+
+
+def load_stats() -> dict:
+    if STATS_FILE.exists():
+        try:
+            return json.loads(STATS_FILE.read_text())
+        except Exception:
+            pass
+    return {"total": 0, "today": 0, "date": _today_msk()}
+
+
+def save_stats(s: dict) -> None:
+    try:
+        STATS_FILE.write_text(json.dumps(s))
+    except Exception as e:
+        log.warning("Could not save stats: %s", e)
+
+
+def increment_starts() -> dict:
+    s = load_stats()
+    today = _today_msk()
+    if s.get("date") != today:
+        s["today"] = 0
+        s["date"] = today
+    s["total"] = s.get("total", 0) + 1
+    s["today"] = s.get("today", 0) + 1
+    save_stats(s)
+    return s
 
 WELCOME_TEXT = (
     "🎯 <b>Демо-накрутка до 10 000 лайков/просмотров — за 1 ₽</b>\n\n"
@@ -73,11 +108,11 @@ async def cmd_myid(message: types.Message) -> None:
 
 @dp.message(Command("start"))
 async def cmd_start(message: types.Message) -> None:
+    stats = increment_starts()
     if ADMIN_CHAT_ID:
         u = message.from_user
         name = f"{u.first_name or ''} {u.last_name or ''}".strip()
         username = f"@{u.username}" if u.username else "—"
-        from datetime import datetime, timezone, timedelta
         msk = datetime.now(timezone(timedelta(hours=3))).strftime("%d.%m.%Y в %H:%M")
         try:
             await bot.send_message(
@@ -87,7 +122,8 @@ async def cmd_start(message: types.Message) -> None:
                     f"Имя: {name}\n"
                     f"Ник: {username}\n"
                     f"ID: <code>{u.id}</code>\n"
-                    f"🕐 {msk}"
+                    f"🕐 {msk}\n\n"
+                    f"📊 Сегодня: <b>{stats['today']}</b> | Всего: <b>{stats['total']}</b>"
                 ),
                 parse_mode="HTML",
             )
