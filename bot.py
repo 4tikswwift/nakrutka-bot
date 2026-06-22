@@ -25,8 +25,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 log = logging.getLogger(__name__)
 
 BOT_TOKEN      = os.getenv("BOT_TOKEN")
-# Сайт мини-аппа хостится на GitHub Pages (доступен в РФ без VPN, в отличие от railway.app)
-WEBAPP_URL     = "https://4tikswwift.github.io/nakrutka-bot/"
+# Сайт мини-аппа хостится на Cloudflare Pages (github.io режут в РФ; деплой: wrangler pages deploy)
+WEBAPP_URL     = "https://podarok-like.pages.dev"
 PORT           = int(os.getenv("PORT", 8080))
 PAYMENT_URL    = os.getenv("PAYMENT_URL", "https://onelinkgo.ru/stream/nakrutka")
 ADMIN_CHAT_ID  = int(os.getenv("ADMIN_CHAT_ID", 0))
