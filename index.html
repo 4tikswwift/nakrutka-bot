@@ -3,200 +3,165 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Подарок 100 000</title>
+  <title>Забрать айфон и накрутку</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0d1521;
-      --surface:  #162030;
-      --surface2: #1c2a3d;
-      --border:   #263850;
-      --accent:   #a855f7;
-      --accent2:  #22d3ee;
-      --green:    #4ade80;
-      --text:     #eaecf4;
-      --text-sec: #7d92b5;
-      --radius:   16px;
-      --radius-sm:11px;
+      --bg: #0a0a18;
+      --gold1: #ffe27a;
+      --gold2: #ffb33e;
+      --pink:  #ff4dd8;
+      --cyan:  #22d3ee;
+      --purple:#a855f7;
     }
 
     html, body {
-      min-height: 100%;
+      height: 100%;
       background: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
 
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
+    /* ── Animated background ── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0; overflow: hidden;
       background:
-        radial-gradient(ellipse 60% 40% at 15% 8%,  rgba(168,85,247,.12) 0%, transparent 60%),
-        radial-gradient(ellipse 55% 45% at 85% 92%, rgba(34,211,238,.10) 0%, transparent 60%);
-      pointer-events: none; z-index: 0;
+        radial-gradient(circle at 50% 50%, #14142e 0%, #0a0a18 70%);
+    }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(70px); opacity: .55;
+      animation: float 14s ease-in-out infinite;
+    }
+    .blob.b1 { width: 60vw; height: 60vw; top: -15%; left: -15%; background: #a855f7; }
+    .blob.b2 { width: 55vw; height: 55vw; bottom: -20%; right: -15%; background: #22d3ee; animation-delay: -4s; }
+    .blob.b3 { width: 45vw; height: 45vw; top: 35%; left: 30%; background: #ff3ea5; animation-delay: -8s; opacity: .4; }
+    @keyframes float {
+      0%,100% { transform: translate(0,0) scale(1); }
+      33%     { transform: translate(8%, -6%) scale(1.12); }
+      66%     { transform: translate(-6%, 8%) scale(.92); }
     }
 
-    #app {
-      position: relative; z-index: 1;
-      min-height: 100vh;
+    /* ── Sparkles ── */
+    .spark { position: absolute; z-index: 1; font-size: 24px; opacity: 0; animation: rise 5s linear infinite; pointer-events: none; }
+    @keyframes rise {
+      0%   { transform: translateY(20px) scale(.6) rotate(0deg); opacity: 0; }
+      15%  { opacity: 1; }
+      100% { transform: translateY(-110vh) scale(1.1) rotate(220deg); opacity: 0; }
+    }
+
+    /* ── Main ── */
+    .wrap {
+      position: relative; z-index: 2;
+      height: 100vh; width: 100%;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 28px 20px 32px;
-      max-width: 460px; margin: 0 auto;
+      padding: 24px; text-align: center;
     }
 
-    /* ── Live badge ── */
-    .badge {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: rgba(74,222,128,.1);
-      border: 1px solid rgba(74,222,128,.3); border-radius: 40px;
-      padding: 6px 15px; font-size: 12px; color: #4ade80; font-weight: 700;
-      margin-bottom: 18px;
+    .emoji-row {
+      font-size: 46px; margin-bottom: 18px;
+      animation: pop .7s cubic-bezier(.18,.9,.3,1.4) both;
+      filter: drop-shadow(0 0 18px rgba(255,180,60,.5));
     }
-    .badge .dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 8px #4ade80; animation: pulse 1.5s ease-in-out infinite; }
-    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+    .emoji-row span { display: inline-block; animation: bob 2.6s ease-in-out infinite; }
+    .emoji-row span:nth-child(2) { animation-delay: .4s; }
+    .emoji-row span:nth-child(3) { animation-delay: .8s; }
+    @keyframes bob { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-12px) rotate(4deg); } }
 
-    /* ── Hero heading ── */
-    .hero {
-      text-align: center; margin-bottom: 26px;
+    /* ── Big headline ── */
+    .headline {
+      font-size: clamp(40px, 13vw, 92px);
+      font-weight: 900; line-height: .98; letter-spacing: -1px;
+      text-transform: uppercase;
+      animation: dropIn .8s cubic-bezier(.18,.9,.3,1.3) both;
     }
-    .hero-big {
-      font-size: 30px; font-weight: 900; line-height: 1.1; letter-spacing: -.5px;
-      background: linear-gradient(135deg, #c084fc 0%, #a855f7 45%, #22d3ee 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-      filter: drop-shadow(0 0 16px rgba(168,85,247,.35));
-      margin-bottom: 10px;
+    .headline .line { display: block; }
+    .grad {
+      background: linear-gradient(100deg, #ffe27a, #ffb33e, #ff5ea8, #22d3ee, #a855f7, #ffe27a);
+      background-size: 300% 100%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent; color: transparent;
+      animation: flow 4s linear infinite;
+      filter: drop-shadow(0 0 26px rgba(255,160,80,.35)) drop-shadow(0 0 50px rgba(168,85,247,.25));
     }
-    .hero-sub {
-      font-size: 14px; color: var(--text-sec); font-weight: 600; line-height: 1.4;
-    }
-    .hero-sub b { color: var(--text); }
+    @keyframes flow { to { background-position: 300% 50%; } }
+    @keyframes dropIn { 0% { opacity: 0; transform: translateY(-40px) scale(.8); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes pop   { 0% { opacity: 0; transform: scale(0); } 100% { opacity: 1; transform: scale(1); } }
 
-    /* ── Card ── */
-    .card {
-      width: 100%;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 22px 20px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px rgba(168,85,247,.06);
+    .headline-glow {
+      position: relative;
+      animation: pulseGlow 2.4s ease-in-out infinite;
     }
+    @keyframes pulseGlow { 0%,100% { filter: brightness(1); } 50% { filter: brightness(1.18); } }
 
-    /* ── Inputs ── */
-    .field { margin-bottom: 15px; }
-    .field-label { font-size: 13px; color: var(--text-sec); font-weight: 600; margin-bottom: 7px; display: block; }
-    input[type="text"] {
-      width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); padding: 14px 15px; font-size: 16px; color: var(--text);
-      outline: none; transition: border-color .2s, box-shadow .2s;
+    .sub {
+      margin-top: 18px; font-size: clamp(14px, 4.2vw, 19px); font-weight: 700;
+      color: #c9d4f0; letter-spacing: .3px;
+      animation: fadeUp 1s .35s both;
     }
-    input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(168,85,247,.15); }
-    input[type="text"]::placeholder { color: var(--text-sec); }
-
-    .divider { height: 1px; background: var(--border); margin: 20px 0 18px; }
-
-    /* ── Steps ── */
-    .steps-title {
-      font-size: 11px; color: var(--text-sec); text-transform: uppercase;
-      letter-spacing: .8px; font-weight: 800; margin-bottom: 13px; text-align: center;
-    }
-    .step {
-      display: flex; align-items: flex-start; gap: 12px; margin-bottom: 13px;
-    }
-    .step:last-child { margin-bottom: 0; }
-    .step-n {
-      width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-      background: linear-gradient(135deg, #a855f7, #22d3ee);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; color: #fff;
-      box-shadow: 0 0 10px rgba(168,85,247,.45);
-    }
-    .step-text { font-size: 14px; color: var(--text); line-height: 1.4; padding-top: 3px; }
-    .step-text .muted { color: var(--text-sec); font-size: 12px; }
+    .sub b { color: #ffd86b; }
+    @keyframes fadeUp { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
 
     /* ── CTA ── */
     .cta {
-      width: 100%; margin-top: 22px;
-      padding: 18px; border: none; border-radius: var(--radius);
-      font-size: 17px; font-weight: 800; color: #fff; cursor: pointer;
-      letter-spacing: .3px;
-      background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #22d3ee 100%);
-      box-shadow: 0 8px 30px rgba(168,85,247,.45);
+      margin-top: 34px;
+      border: none; cursor: pointer;
+      font-size: clamp(18px, 5.5vw, 24px); font-weight: 900; letter-spacing: .5px;
+      color: #1a0e00; text-transform: uppercase;
+      padding: 20px 40px; border-radius: 60px;
+      background: linear-gradient(135deg, #ffe27a, #ffb33e 55%, #ff7eb3);
+      box-shadow: 0 10px 40px rgba(255,170,60,.55), 0 0 0 0 rgba(255,200,90,.6);
       position: relative; overflow: hidden;
-      transition: transform .15s;
+      animation: fadeUp 1s .5s both, beat 1.5s ease-in-out .5s infinite;
       -webkit-tap-highlight-color: transparent;
     }
     .cta::after {
-      content: ''; position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
-      animation: shimmer 2.6s infinite;
+      content: ''; position: absolute; top: 0; left: -120%; width: 70%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+      transform: skewX(-20deg); animation: shine 2.4s infinite;
     }
-    @keyframes shimmer { to { left: 160%; } }
-    .cta:active { transform: scale(.97); }
+    @keyframes shine { 0% { left: -120%; } 60%,100% { left: 160%; } }
+    @keyframes beat {
+      0%,100% { transform: scale(1);   box-shadow: 0 10px 40px rgba(255,170,60,.55), 0 0 0 0 rgba(255,200,90,.55); }
+      50%     { transform: scale(1.05); box-shadow: 0 14px 50px rgba(255,170,60,.7),  0 0 0 18px rgba(255,200,90,0); }
+    }
+    .cta:active { transform: scale(.96); }
 
-    .guarantee {
-      font-size: 12px; color: var(--text-sec); font-weight: 600;
-      text-align: center; margin-top: 14px;
+    .hint {
+      margin-top: 16px; font-size: 13px; color: #8a93b5; font-weight: 600;
+      animation: fadeUp 1s .7s both;
     }
+    .hint .live { color: #4ade80; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 10px #4ade80; margin-right: 5px; vertical-align: middle; animation: blink 1.3s infinite; }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .25; } }
   </style>
 </head>
 <body>
 
-<div id="app">
+<div class="bg">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
 
-  <div class="badge"><span class="dot"></span> Только для первых пользователей</div>
+<div class="wrap" onclick="grab()">
 
-  <div class="hero">
-    <div class="hero-big">ХАЛЯВНЫЕ 100 000 ПРОСМОТРОВ ИЛИ ЛАЙКОВ</div>
-    <div class="hero-sub">для наших <b>первых пользователей</b></div>
-  </div>
+  <div class="emoji-row"><span>📱</span><span>🤑</span><span>🚀</span></div>
 
-  <div class="card">
-    <div class="field">
-      <label class="field-label">Введи свой никнейм в like</label>
-      <input type="text" id="nick-input" placeholder="@username" autocomplete="off" autocorrect="off" autocapitalize="none"/>
-    </div>
+  <h1 class="headline headline-glow">
+    <span class="line grad">Забрать</span>
+    <span class="line grad">айфон</span>
+    <span class="line grad">и накрутку</span>
+  </h1>
 
-    <div class="field">
-      <label class="field-label">Вставь ссылку на видео</label>
-      <input type="text" id="link-input" placeholder="https://..." autocomplete="off"/>
-    </div>
+  <div class="sub">розыгрыш <b>iPhone</b> + <b>100 000</b> просмотров каждому</div>
 
-    <div class="divider"></div>
+  <button class="cta" onclick="grab(event)">ЗАБРАТЬ 🎁</button>
 
-    <div class="steps-title">Как получить подарок</div>
-
-    <div class="step">
-      <div class="step-n">1</div>
-      <div class="step-text">Введи свой никнейм в <b>like</b></div>
-    </div>
-    <div class="step">
-      <div class="step-n">2</div>
-      <div class="step-text">Вставь ссылку на видео</div>
-    </div>
-    <div class="step">
-      <div class="step-n">3</div>
-      <div class="step-text">Нажми на кнопку <b>«ПОЛУЧИТЬ НАКРУТКУ»</b></div>
-    </div>
-    <div class="step">
-      <div class="step-n">4</div>
-      <div class="step-text">Введи любую почту <span class="muted">(можешь выдумать)</span></div>
-    </div>
-    <div class="step">
-      <div class="step-n">5</div>
-      <div class="step-text">Оплати 1 рубль <span class="muted">(бесплатно по закону не можем)</span></div>
-    </div>
-    <div class="step">
-      <div class="step-n">6</div>
-      <div class="step-text">Получи <b>100 000 просмотров или лайков</b> + участие в розыгрыше <b>подарочной карты WB на 5 000 ₽</b> 🎁</div>
-    </div>
-
-    <button class="cta" onclick="getGift()">ПОЛУЧИТЬ НАКРУТКУ 🎁</button>
-    <div class="guarantee">🛡️ Не понравится — вернём рубль</div>
-    <div class="guarantee">⏱️ В течение 24 часов накрутим <span class="muted">(если не появится — напишем вам)</span></div>
-  </div>
+  <div class="hint"><span class="dot"></span><span class="live">2 418 человек</span> забирают прямо сейчас</div>
 
 </div>
 
@@ -204,17 +169,34 @@
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg) { tg.ready(); tg.expand(); }
 
-  function haptic() {
-    if (tg && tg.HapticFeedback) {
-      try { tg.HapticFeedback.impactOccurred('heavy'); } catch(e) {}
-    }
-  }
-
-  function getGift() {
-    haptic();
+  function grab(e) {
+    if (e) e.stopPropagation();
+    if (tg && tg.HapticFeedback) { try { tg.HapticFeedback.impactOccurred('heavy'); } catch(err) {} }
     const url = 'https://onelinkgo.ru/stream/nakrutka';
     if (tg && tg.openLink) tg.openLink(url); else window.open(url, '_blank');
   }
+
+  // ── floating sparkles ──
+  const sparks = ['✨','⭐','💎','📱','🤑','💰'];
+  function spawnSpark() {
+    const s = document.createElement('div');
+    s.className = 'spark';
+    s.textContent = sparks[Math.floor(Math.random() * sparks.length)];
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.fontSize = (16 + Math.random() * 20) + 'px';
+    s.style.animationDuration = (4 + Math.random() * 4) + 's';
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 9000);
+  }
+  setInterval(spawnSpark, 700);
+
+  // ── live counter tick ──
+  let live = 2418;
+  setInterval(() => {
+    live += Math.floor(Math.random() * 3) + 1;
+    const el = document.querySelector('.live');
+    if (el) el.textContent = live.toLocaleString('ru-RU') + ' человек';
+  }, 2500);
 </script>
 </body>
 </html>
