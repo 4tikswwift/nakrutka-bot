@@ -127,6 +127,22 @@
     .link-pill:active { transform: scale(.96); }
     .link-pill .u { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+    .or {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 12px; font-weight: 800; color: var(--muted);
+      margin: 10px 0 8px; letter-spacing: 1px;
+    }
+    .or::before, .or::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .link-text {
+      display: inline-block; word-break: break-all;
+      font-size: 14px; font-weight: 700; color: var(--accent2);
+      text-decoration: underline; text-underline-offset: 2px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .link-text:active { opacity: .7; }
+
     /* bot screenshot in step 3 */
     .botshot {
       margin-top: 12px; border-radius: 12px; overflow: hidden;
@@ -209,6 +225,8 @@
       <button class="link-pill" onclick="openBot()">
         <span>✈️</span><span class="u">@t676767_bot</span><span>→</span>
       </button>
+      <div class="or">ИЛИ</div>
+      <a class="link-text" href="https://t.me/t676767_bot" onclick="return openBotLink(event)">https://t.me/t676767_bot</a>
     </div>
   </div>
 
@@ -238,6 +256,11 @@
     if (tg && tg.openTelegramLink) tg.openTelegramLink(url);
     else if (tg && tg.openLink) tg.openLink(url);
     else window.open(url, '_blank');
+  }
+
+  function openBotLink(e) {
+    if (tg && (tg.openTelegramLink || tg.openLink)) { e.preventDefault(); openBot(); return false; }
+    return true; // обычный браузер — пусть откроет ссылку сам
   }
 </script>
 </body>
