@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#f6dde8; --ink:#34334d; --muted:#9a9ab4; --card:#ffffff;
+      --bg:#e7c3d4; --ink:#34334d; --muted:#9a9ab4; --card:#ffffff;
       --pink:#ff4d8d; --blue:#2aabee; --green:#36c95f; --yellow:#ffce3a;
     }
     html,body{min-height:100%;background:var(--bg);color:var(--ink);
@@ -69,7 +69,7 @@
       -webkit-tap-highlight-color:transparent;animation:boop 1.3s ease-in-out infinite;}
     .bigbtn:active{transform:translateY(8px);box-shadow:0 4px 0 #28a04a,0 8px 16px rgba(54,201,95,.3)}
     @keyframes boop{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-    .bigbtn .hand{display:block;font-size:22px;margin-top:4px}
+    .bigbtn .hand{display:block;font-size:16px;margin-top:6px;font-weight:800}
 
     /* низ: скрины */
     .proof{margin-top:30px}
@@ -101,7 +101,7 @@
   </div>
 
   <div class="timer pop">
-    <div class="lbl">осталось</div>
+    <div class="lbl">ты должен всё сделать за</div>
     <div class="clock"><span id="t">10:00</span> <span class="em">⏰</span></div>
   </div>
 
@@ -135,7 +135,7 @@
     </div>
   </div>
 
-  <button class="bigbtn" onclick="openBot()">НАЖМИ НА МЕНЯ<span class="hand">👇</span></button>
+  <button class="bigbtn" onclick="openBot()">НАЖМИ НА МЕНЯ<span class="hand">не забудь ВПН 👇</span></button>
 
   <!-- скрины внизу -->
   <div class="proof pop">
