@@ -8,7 +8,7 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
-      --bg:#fff4f8; --ink:#34334d; --muted:#9a9ab4; --card:#ffffff;
+      --bg:#f6dde8; --ink:#34334d; --muted:#9a9ab4; --card:#ffffff;
       --pink:#ff4d8d; --blue:#2aabee; --green:#36c95f; --yellow:#ffce3a;
     }
     html,body{min-height:100%;background:var(--bg);color:var(--ink);
@@ -54,6 +54,12 @@
     .step .txt .s{font-size:14px;color:var(--muted);font-weight:700;margin-top:2px}
     .step .pic{flex-shrink:0;width:50px;height:50px;display:flex;align-items:center;justify-content:center}
     .step .pic svg{width:48px;height:48px;display:block}
+    .step.big{padding:26px 18px}
+    .step.big .num{width:44px;height:44px;font-size:21px}
+    .step.big .txt .h{font-size:24px}
+    .step.big .txt .s{font-size:16px;margin-top:4px}
+    .step.big .pic{width:62px;height:62px}
+    .step.big .pic svg{width:60px;height:60px}
 
     /* БОЛЬШАЯ кнопка */
     .bigbtn{display:block;width:100%;border:none;cursor:pointer;
@@ -103,7 +109,7 @@
     <div class="num">1</div>
     <div class="txt">
       <div class="h">Включи ВПН<span class="bang">!</span></div>
-      <div class="s">если ты из России</div>
+      <div class="s">(любой) · если ты из России</div>
     </div>
     <div class="pic">
       <!-- иконка ВПН: щит -->
@@ -114,11 +120,11 @@
     </div>
   </div>
 
-  <div class="step pop">
+  <div class="step pop big">
     <div class="num">2</div>
     <div class="txt">
       <div class="h">Открой бота в телеграме</div>
-      <div class="s">там получишь просмотры 🎬</div>
+      <div class="s">по кнопке внизу 👇</div>
     </div>
     <div class="pic">
       <!-- логотип телеграма -->
